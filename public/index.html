@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        div {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            margin-right: 10px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+            cursor: pointer;
+        }
+        #response {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid; /* Add a default border */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Đăng nhập</h1>
+    <form action="/login" method="POST">
+        <div>
+            <label for="username">Tên đăng nhập:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Mật khẩu:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Đăng nhập</button>
+        <div id="response">
+            Thống báo tại đây
+        </div>
+    </form>
+
+    <script>
+        const form = document.querySelector('form');
+        const responseDiv = document.getElementById('response');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Ngăn chặn hành vi gửi form mặc định
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries()); // Chuyển FormData thành object
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Sửa lại thành application/json
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                responseDiv.textContent = result.message; // Hiển thị thông báo từ server
+                if (res.ok) {
+                    responseDiv.style.backgroundColor = '#d4edda'; // Green for success
+                    responseDiv.style.color = '#155724';
+                    responseDiv.style.borderColor = '#28a745'; // Green border
+                } else {
+                    responseDiv.style.backgroundColor = '#f8d7da'; // Red for error
+                    responseDiv.style.color = '#721c24';
+                    responseDiv.style.borderColor = '#dc3545'; // Red border
+                }
+            } catch (error) {
+                responseDiv.textContent = 'Đã có lỗi xảy ra khi gửi yêu cầu.';
+                console.error('Error:', error);
+                responseDiv.style.backgroundColor = '#f8d7da'; // Red for error
+                responseDiv.style.color = '#721c24';
+                responseDiv.style.borderColor = '#dc3545'; // Red border
+            }
+        });
+    </script>
+</body>
+</html>
