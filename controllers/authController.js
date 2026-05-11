@@ -46,7 +46,11 @@ exports.login = async (req, res) => {
             res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
         }
     } catch (error){
-        res.status(500).json({ error: "Lỗi Server" });
+        console.error("Lỗi chi tiết:", error); // Dòng này sẽ hiện ở Render Logs
+        res.status(500).json({ 
+            error: 'Lỗi Server', 
+            detail: error.message // Gửi tin nhắn lỗi thực tế về cho Playcode thấy
+        });
     }
 }
 
