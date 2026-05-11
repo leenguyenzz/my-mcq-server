@@ -12,7 +12,16 @@ const allowedOrigins = [
   'http://localhost:5173', // Nếu bạn test máy cục bộ
 ];
 
-app.use(cors());
+app.use(cors({
+  // THAY ĐỔI: Không dùng '*', hãy copy đúng domain Playcode của bạn
+  origin: 'https://2687866.preview.playcode.io', 
+  
+  // QUAN TRỌNG: Phải có dòng này để khớp với với withCredentials của Client
+  credentials: true, 
+  
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(cookieParser());
 
