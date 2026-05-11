@@ -8,7 +8,7 @@ exports.register = async (req, res) => {
         const { username, password } = req.body;
         const user = await User.findOne({ username });
         if(user){
-            return res.status(400).json({ error: "Người dùng đã tồn tại" });
+            throw new Error("Username đã tồn tại");
         }
         // Băm mật khẩu
         const hashedPassword = await bcrypt.hash(password, 10);
