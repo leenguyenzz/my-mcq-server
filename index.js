@@ -7,11 +7,6 @@ require('dotenv').config();
 const app = express();
 
 // 1. Middlewares (Luôn để trên đầu)
-const allowedOrigins = [
-  'https://2687866.preview.playcode.io',
-  'http://localhost:5173', // Nếu bạn test máy cục bộ
-];
-
 app.use(cors({
   // THAY ĐỔI: Không dùng '*', hãy copy đúng domain Playcode của bạn
   origin: 'https://2687866.preview.playcode.io', 
