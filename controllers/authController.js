@@ -4,18 +4,31 @@ const jwt = require('jsonwebtoken');
 
 // Đăng ký
 exports.register = async (req, res) => {
-    try{
+    try {
         const { username, password } = req.body;
+
+        // 1. Kiểm tra username đã tồn tại chưa
         const user = await User.findOne({ username });
-        if(user){
-            throw new Error("Username đã tồn tại");
+        if (user) {
+            // Trả về 409 Conflict cho lỗi trùng dữ liệu
+            return res.status(409).json({ error: "Username đã tồn tại" });
         }
-        // Băm mật khẩu
+
+        // 2. Băm mật khẩu
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({username, password: hashedPassword});
-        res.status(201).json({message: "Đăng ký thành công", user: {username: newUser.username}});
-    } catch(error) {
-        res.status(400).json({error: "Lỗi đăng ký hoặc username đã tồn tại"});
+
+        // 3. Tạo user mới
+        const newUser = await User.create({ username, password: hashedPassword });
+
+        res.status(201).json({ 
+            message: "Đăng ký thành công", 
+            user: { username: newUser.username } 
+        });
+
+    } catch (error) {
+        console.error("Lỗi đăng ký:", error);
+        // Trả về 500 nếu là lỗi server (ví dụ mất kết nối DB)
+        res.status(500).json({ error: "Lỗi hệ thống, vui lòng thử lại sau" });
     }
 }
 
