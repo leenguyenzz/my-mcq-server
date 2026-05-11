@@ -1,26 +1,42 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
-app.use(cors());
-
-const mcqRouter = require('./routes/mcq');
-const authRouter = require('./routes/authRoutes')
-const profileRouter = require('./routes/profileRoutes');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-
 require('dotenv').config();
+
+const app = express();
+
+// 1. Middlewares (Luôn để trên đầu)
+const allowedOrigins = [
+  'https://2687866.preview.playcode.io',
+  'http://localhost:5173', // Nếu bạn test máy cục bộ
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+app.use(express.json());
+app.use(cookieParser());
+
+// 2. Kết nối DB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Đã kết nối thành công tới MongoDB!'))
   .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
-app.use(express.json());
-
+// 3. Routes
+const authRouter = require('./routes/authRoutes')
+const profileRouter = require('./routes/profileRoutes');
 app.use('/api/auth', authRouter);
-app.use('/mcq', mcqRouter);
 app.use('/api', profileRouter);
 
-app.get('/', (req, res) => {
-    res.send("Server is Online!");
-});
+app.get('/', (req, res) => { res.send("Server is Online!") });
+// 4. Khởi động
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

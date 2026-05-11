@@ -5,10 +5,10 @@ const jwt = require('jsonwebtoken');
 // Đăng ký
 exports.register = async (req, res) => {
     try{
-        const { username, password, role } = req.body;
+        const { username, password } = req.body;
         // Băm mật khẩu
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({username, password: hashedPassword, role});
+        const newUser = await User.create({username, password: hashedPassword});
         res.status(201).json({message: "Đăng ký thành công", user: {username: newUser.username}});
     } catch(error) {
         res.status(400).json({error: "Lỗi đăng ký hoặc username đã tồn tại"});
@@ -17,13 +17,72 @@ exports.register = async (req, res) => {
 
 // Đăng nhập
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
+    try{
+        const { username, password } = req.body;
+        const user = await User.findOne({ username });
 
-    if (user && bcrypt.compare(password, user.password)) {
-        const token =jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2w'});
-        res.json({ message: "Đăng nhập thành công!", token });
-    } else {
-        res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
+        if (user && bcrypt.compare(password, user.password)) {
+            // 1. Tạo Access Token (Ngắn hạn - 15 phút)
+            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+            // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
+            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+            
+            // 3. LƯU refreshToken VÀO DATABASE
+            user.refreshToken = refreshToken; 
+            await user.save();
+            
+            // 4. Lưu Refresh Token vào Cookie (HttpOnly & SameSite)
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // true nếu dùng https
+                sameSite: 'Strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+            });
+
+            // 4. Trả Access Token về cho Frontend
+            res.json({ message: "Đăng nhập thành công!", accessToken });
+        } else {
+            res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
+        }
+    } catch (error){
+        res.status(500).json({ error: "Lỗi Server" });
     }
 }
+
+// Làm mới Access Token khi hết hạn
+exports.refreshToken = async (req, res) => {
+    try {
+        // Lấy refreshToken từ cookie (cần cài cookie-parser)
+        const refreshToken = req.cookies.refreshToken;
+        if(!refreshToken) return res.status(401).json("Bạn chưa đăng nhập!");
+
+        // Tìm user sở hữu token này trong DB
+        const userInDb = await User.findOne({ refreshToken });
+        if(!userInDb) return res.status(403).json("Token không hợp lệ hoặc đã bị thu hồi!");
+
+        // Xác minh Refresh Token
+        jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+            if (err) res.status(403).json("Token hết hạn!");
+
+            //Nếu hợp lệ, cấp Access Token mới
+            const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+            
+            res.json({ accessToken: newAccessToken });
+        });
+    } catch (err) {
+        res.status(500).json("Lỗi hệ thống");
+    }
+}
+
+// Hàm mới: Đăng xuất
+exports.logout = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    // Tìm user đang sở hữu token này và xóa trắng trường refreshToken
+    await User.findOneAndUpdate({ refreshToken }, { refreshToken: null });
+
+    // Xóa cookie refreshToken
+    res.clearCookie('refreshToken');
+    res.json({ message: "Đăng xuất thành công!" });
+};
