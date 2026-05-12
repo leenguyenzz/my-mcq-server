@@ -80,7 +80,7 @@ exports.refreshToken = async (req, res) => {
 
         // Tìm user sở hữu token này trong DB
         const userInDb = await User.findOne({ refreshToken });
-        if(!userInDb) return res.status(403).json("Token không hợp lệ hoặc đã bị thu hồi!");
+        if(!userInDb) return res.status(401).json("Token không hợp lệ hoặc đã bị thu hồi!");
 
         // Xác minh Refresh Token
         jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
