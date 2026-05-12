@@ -53,7 +53,7 @@ exports.login = async (req, res) => {
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production', // true nếu dùng https
-                sameSite: 'Strict',
+                sameSite: 'none',
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
             });
 
@@ -84,10 +84,10 @@ exports.refreshToken = async (req, res) => {
 
         // Xác minh Refresh Token
         jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
-            if (err) res.status(403).json("Token hết hạn!");
+            if (err) res.status(401).json("Token hết hạn!");
 
             //Nếu hợp lệ, cấp Access Token mới
-            const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+            const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1m' });
             
             res.json({ accessToken: newAccessToken });
         });
