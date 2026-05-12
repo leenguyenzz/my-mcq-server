@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 
 exports.protect = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
+    console.log("Token nhận được ở server:", token); // Log để kiểm tra token có được gửi lên không
     // 1. Log để xem headers thực tế
     console.log("Headers nhận được:", req.headers);
     // 2. Kiểm tra nếu header hoàn toàn không tồn tại
