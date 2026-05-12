@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
             // 4. Lưu Refresh Token vào Cookie (HttpOnly & SameSite)
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', // true nếu dùng https
+                secure: true, // true nếu dùng https process.env.NODE_ENV === 'production'
                 sameSite: 'none',
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
             });
