@@ -6,7 +6,7 @@ exports.deposit = (req, res) => {
     const userId = req.user.id; // Giả sử bạn đã có middleware xác thực và gắn user vào req
     const { amount } = req.body;
     // Logic để xử lý nạp tiền vào tài khoản
-    Bank.findOneAndUpdate({ userId }, { $inc: { balance: amount } }, { new: true })
+    Bank.findOneAndUpdate({ userId: userId }, { $inc: { balance: amount } }, { new: true })
         .then(bank => {
             res.json({ message: `Đã nạp ${amount} vào tài khoản!`, balance: bank.balance });
         })
