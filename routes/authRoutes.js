@@ -5,6 +5,6 @@ const { register, login, logout, refreshToken } = require('../controllers/authCo
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', logout);
-router.post('/refresh', refreshToken);
+router.post('/refreshToken', refreshToken);
 
 module.exports = router;
