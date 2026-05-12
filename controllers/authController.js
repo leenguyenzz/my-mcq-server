@@ -43,7 +43,7 @@ exports.login = async (req, res) => {
             const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1m' });
             
             // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
-            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '1m' });
             
             // 3. LƯU refreshToken VÀO DATABASE
             user.refreshToken = refreshToken; 
