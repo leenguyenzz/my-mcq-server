@@ -40,8 +40,8 @@ exports.login = async (req, res) => {
 
         if (user && bcrypt.compare(password, user.password)) {
             // 1. Tạo Access Token (Ngắn hạn - 15 phút)
-            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
-
+            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1m' });
+            
             // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
             const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
             
