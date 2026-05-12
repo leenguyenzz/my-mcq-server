@@ -9,7 +9,7 @@ const app = express();
 // 1. Middlewares (Luôn để trên đầu)
 app.use(cors({
   // THAY ĐỔI: Không dùng '*', hãy copy đúng domain Playcode của bạn
-  origin: 'https://2687866.preview.playcode.io', 
+  origin: ['https://2687866.preview.playcode.io','https://playcode.io/website-template--019cf9b7-2708-7484-9577-30b569209124'], 
   
   // QUAN TRỌNG: Phải có dòng này để khớp với với withCredentials của Client
   credentials: true, 
