@@ -28,6 +28,9 @@ mongoose.connect(process.env.MONGO_URI)
 // 3. Routes
 const authRouter = require('./routes/authRoutes')
 const profileRouter = require('./routes/profileRoutes');
+const bankRouter = require('./routes/bankRoutes');
+
+app.use('/api/bank', bankRouter);
 app.use('/api/auth', authRouter);
 app.use('/api', profileRouter);
 

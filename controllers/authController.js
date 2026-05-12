@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Bank = require('../models/Bank');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -19,6 +20,9 @@ exports.register = async (req, res) => {
 
         // 3. Tạo user mới
         const newUser = await User.create({ username, password: hashedPassword });
+
+        // 4. Tạo tài khoản ngân hàng cho người dùng mới
+        await Bank.create({ id: newUser._id, balance: 0 });
 
         res.status(201).json({ 
             message: "Đăng ký thành công", 
@@ -43,7 +47,7 @@ exports.login = async (req, res) => {
             const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1m' });
             
             // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
-            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '1m' });
+            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
             
             // 3. LƯU refreshToken VÀO DATABASE
             user.refreshToken = refreshToken; 
