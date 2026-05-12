@@ -10,6 +10,6 @@ exports.protect = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(403).json({ message: "Token không hợp lệ" });
+        res.status(401).json({ message: "Token không hợp lệ" });
     }
 };
