@@ -1,10 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 100 // giới hạn mỗi IP
+});
 
 // 1. Middlewares (Luôn để trên đầu)
 app.use(cors({
@@ -17,8 +24,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
+// Chế độ 'dev' sẽ cho ra các dòng log có màu sắc, dễ nhìn
+app.use(morgan('dev'));
 
 // 2. Kết nối DB
 mongoose.connect(process.env.MONGO_URI)

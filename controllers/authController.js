@@ -48,11 +48,11 @@ exports.login = async (req, res) => {
 
         if (user && bcrypt.compare(password, user.password)) {
             // 1. Tạo Access Token (Ngắn hạn - 15 phút)
-            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1m' });
+            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
             
             // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
-            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-            
+            const refreshToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+            console.log("Role", user.role); // Dòng này sẽ hiện ở Render Logs để bạn kiểm tra role của user khi đăng nhập
             // 3. LƯU refreshToken VÀO DATABASE
             user.refreshToken = refreshToken; 
             await user.save();
@@ -114,4 +114,18 @@ exports.logout = async (req, res) => {
     // Xóa cookie refreshToken
     res.clearCookie('refreshToken');
     res.json({ message: "Đăng xuất thành công!" });
+};
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const { username } = req.body;
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: 'Người dùng không tồn tại' });
+        }
+        await User.deleteOne({ username });
+        res.json({ message: 'Xóa thành công' });
+    } catch (error) {
+        res.status(500).json({ error: 'Lỗi server' });
+    }
 };
