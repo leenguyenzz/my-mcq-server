@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Bank = require('../models/Bank');
+const mongoose = require('mongoose');
 
 
 exports.deposit = (req, res) => {
@@ -36,40 +37,64 @@ exports.withdraw = async (req, res) => {
 }
 
 exports.transfer = async (req, res) => {
-    const userId = req.user.id; // Giả sử bạn đã có middleware xác thực và gắn user vào req
-    const { amount, toAccount } = req.body;
-    // Logic để xử lý chuyển tiền đến tài khoản khác
-    await User.findOne({ accountNumber: toAccount }).then(recipient => {
-        if (!recipient) {
-            return res.status(404).json({ error: 'Tài khoản người nhận không tồn tại!' });
+    try {
+        const userId = req.user.id;
+        const { amount, toAccount } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ error: 'Số tiền không hợp lệ!' });
         }
-        const balance = await Bank.findOne({ userId: userId }).then(bank => bank.balance);
-        if (balance < amount) {
-            return res.status(400).json({ error: 'Số dư không đủ để chuyển!' });
-        }
-        await transferMoney(userId, toAccount, amount);
-    }).catch(err => {
-        res.status(500).json({ error: 'Lỗi hệ thống' });
-    });
+
+        // Gọi hàm xử lý giao dịch
+        const result = await transferMoney(userId, toAccount, amount);
+
+        res.json({ 
+            message: `Đã chuyển ${amount} đến tài khoản ${toAccount} thành công!`,
+            newBalance: result.senderBalance 
+        });
+    } catch (err) {
+        // Bắt các lỗi được throw từ transferMoney (ví dụ: không đủ tiền, sai STK)
+        res.status(400).json({ error: err.message || 'Lỗi hệ thống' });
+    }
 }
 
 const transferMoney = async (userId, toAccount, amount) => {
-    // Trừ tiền từ tài khoản người gửi và cộng tiền vào tài khoản người nhận
-    await Bank.findOneAndUpdate({ userId: userId }, { $inc: { balance: -amount } }, { new: true })
-        .then(async bank => {
-            // Sau khi trừ tiền từ tài khoản người gửi, cộng tiền vào tài khoản người nhận
-            await Bank.findOneAndUpdate({ accountNumber: toAccount }, { $inc: { balance: amount } }, { new: true })
-                .then(async bank => {
-                    res.json({ message: `Đã chuyển ${amount} đến tài khoản ${toAccount}!` });
-                })
-                .catch(err => {
-                    res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật tài khoản người nhận' });
-                });
-        })
-        .catch(err => {
-            res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật tài khoản người gửi' });
-        });
-    // res.json({ message: `Đã chuyển ${amount} đến tài khoản ${toAccount}!` }); // This line is redundant and should be removed
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        // 1. Trừ tiền người gửi VÀ kiểm tra số dư cùng lúc (Atomic)
+        const sender = await Bank.findOneAndUpdate(
+            { userId: userId, balance: { $gte: amount } },
+            { $inc: { balance: -amount } },
+            { session, new: true }
+        );
+
+        if (!sender) {
+            throw new Error('Số dư không đủ hoặc tài khoản gửi không tồn tại');
+        }
+
+        // 2. Cộng tiền người nhận
+        const recipient = await Bank.findOneAndUpdate(
+            { accountNumber: toAccount },
+            { $inc: { balance: amount } },
+            { session, new: true }
+        );
+
+        if (!recipient) {
+            throw new Error('Tài khoản người nhận không tồn tại');
+        }
+
+        // 3. (Optional) Ghi log giao dịch tại đây nếu có collection Transactions
+        // await Transaction.create([{ from: userId, to: toAccount, amount }], { session });
+
+        await session.commitTransaction();
+        return { senderBalance: sender.balance };
+    } catch (error) {
+        await session.abortTransaction();
+        throw error; 
+    } finally {
+        session.endSession();
+    }
 }
 
 exports.getBalance = async (req, res) => {
