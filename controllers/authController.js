@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
         const newUser = await User.create({ username, password: hashedPassword });
 
         // 4. Tạo tài khoản ngân hàng cho người dùng mới
-        await Bank.create({ id: newUser._id, balance: 0 });
+        await Bank.create({ userId: newUser._id, balance: 0 });
 
         res.status(201).json({ 
             message: "Đăng ký thành công", 
