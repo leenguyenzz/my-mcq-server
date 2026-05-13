@@ -18,24 +18,40 @@ exports.deposit = (req, res) => {
 
 exports.withdraw = async (req, res) => {
     try {
-        const userId = req.user.id; // Giả sử bạn đã có middleware xác thực và gắn user vào req
+        const userId = req.user.id;
         const { amount } = req.body;
-        // Logic để xử lý rút tiền từ tài khoản
-        const bank = await Bank.findOne({ userId: userId });
-        if (!bank) {
-            return res.status(404).json({ error: 'Tài khoản không tồn tại!' });
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ error: 'Số tiền rút không hợp lệ!' });
         }
-        if (bank.balance < amount) {
-            return res.status(400).json({ error: 'Số dư không đủ để rút!' });
+
+        // Tìm và cập nhật ngay lập tức nếu thỏa mãn điều kiện balance >= amount
+        const updatedBank = await Bank.findOneAndUpdate(
+            { 
+                userId: userId, 
+                balance: { $gte: amount } // CHỈ thực hiện nếu số dư đủ
+            }, 
+            { 
+                $inc: { balance: -amount } // Trừ tiền trực tiếp ở DB
+            }, 
+            { new: true } // Trả về kết quả sau khi cập nhật
+        );
+
+        if (!updatedBank) {
+            // Nếu không tìm thấy bank hoặc số dư không đủ, updatedBank sẽ là null
+            return res.status(400).json({ error: 'Số dư không đủ hoặc tài khoản không tồn tại!' });
         }
-        bank.balance -= amount;
-        await bank.save();
-        res.json({ message: `Đã rút ${amount} từ tài khoản!`, balance: bank.balance });
+
+        res.json({ 
+            message: `Đã rút ${amount} thành công!`, 
+            balance: updatedBank.balance 
+        });
+
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Lỗi hệ thống' });
     }
 }
-
 exports.transfer = async (req, res) => {
     try {
         const userId = req.user.id;
