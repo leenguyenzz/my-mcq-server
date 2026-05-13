@@ -22,7 +22,11 @@ exports.register = async (req, res) => {
         const newUser = await User.create({ username, password: hashedPassword });
 
         // 4. Tạo tài khoản ngân hàng cho người dùng mới
-        await Bank.create({ userId: newUser._id, balance: 0 });
+        // Hàm tạo số tài khoản ngẫu nhiên
+        const generateAccountNumber = () => {
+            return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        };
+        await Bank.create({ userId: newUser._id, accountNumber: generateAccountNumber(), accountHolder: newUser.username, balance: 0 });
 
         res.status(201).json({ 
             message: "Đăng ký thành công", 

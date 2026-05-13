@@ -16,15 +16,37 @@ exports.deposit = (req, res) => {
 }
 
 exports.withdraw = (req, res) => {
+    const userId = req.user.id; // Giả sử bạn đã có middleware xác thực và gắn user vào req
     const { amount } = req.body;
     // Logic để xử lý rút tiền từ tài khoản
-    res.json({ message: `Đã rút ${amount} từ tài khoản!` });
+    Bank.findOneAndUpdate({ userId: userId }, { $inc: { balance: -amount } }, { new: true })
+        .then(bank => {
+            res.json({ message: `Đã rút ${amount} từ tài khoản!`, balance: bank.balance });
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Lỗi hệ thống' });
+        });
 }
 
 exports.transfer = (req, res) => {
+    const userId = req.user.id; // Giả sử bạn đã có middleware xác thực và gắn user vào req
     const { amount, toAccount } = req.body;
     // Logic để xử lý chuyển tiền đến tài khoản khác
-    res.json({ message: `Đã chuyển ${amount} đến tài khoản ${toAccount}!` });
+    Bank.findOneAndUpdate({ userId: userId }, { $inc: { balance: -amount } }, { new: true })
+        .then(bank => {
+            // Sau khi trừ tiền từ tài khoản người gửi, cộng tiền vào tài khoản người nhận
+            Bank.findOneAndUpdate({ userId: toAccount }, { $inc: { balance: amount } }, { new: true })
+                .then(bank => {
+                    res.json({ message: `Đã chuyển ${amount} đến tài khoản ${toAccount}!` });
+                })
+                .catch(err => {
+                    res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật tài khoản người nhận' });
+                });
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật tài khoản người gửi' });
+        });
+    // res.json({ message: `Đã chuyển ${amount} đến tài khoản ${toAccount}!` }); // This line is redundant and should be removed
 }
 
 exports.getBalance = (req, res) => {
