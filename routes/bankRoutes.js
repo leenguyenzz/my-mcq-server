@@ -6,6 +6,6 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/deposit', protect, deposit);
 router.post('/withdraw', protect, withdraw);
 router.post('/transfer', protect, transfer);
-router.get('/balance/:accountNumber', protect, getBalance);
+router.get('/balance', protect, getBalance);
 
 module.exports = router;
