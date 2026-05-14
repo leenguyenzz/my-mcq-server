@@ -44,9 +44,9 @@ const authRouter = require('./routes/authRoutes')
 const profileRouter = require('./routes/profileRoutes');
 const bankRouter = require('./routes/bankRoutes');
 
-app.use('/api/bank', limiter, bankRouter);
+app.use('/api/bank', bankRouter);
 app.use('/api/auth', authRouter);
-app.use('/api', limiter, profileRouter);
+app.use('/api', profileRouter);
 
 app.get('/', (req, res) => { res.send("Server is Online!") });
 // 4. Khởi động
