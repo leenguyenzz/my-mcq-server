@@ -28,7 +28,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(limiter);
+
 app.use(express.json());
 app.use(cookieParser());
 // Chế độ 'dev' sẽ cho ra các dòng log có màu sắc, dễ nhìn
@@ -44,9 +44,9 @@ const authRouter = require('./routes/authRoutes')
 const profileRouter = require('./routes/profileRoutes');
 const bankRouter = require('./routes/bankRoutes');
 
-app.use('/api/bank', bankRouter);
+app.use('/api/bank', limiter, bankRouter);
 app.use('/api/auth', authRouter);
-app.use('/api', profileRouter);
+app.use('/api', limiter, profileRouter);
 
 app.get('/', (req, res) => { res.send("Server is Online!") });
 // 4. Khởi động
