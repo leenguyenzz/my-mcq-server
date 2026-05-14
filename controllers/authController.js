@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
             
             // 2. Tạo Refresh Token (Dài hạn - 7 ngày)
             const refreshToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-            console.log("Role", user.role); // Dòng này sẽ hiện ở Render Logs để bạn kiểm tra role của user khi đăng nhập
+
             // 3. LƯU refreshToken VÀO DATABASE
             user.refreshToken = refreshToken; 
             await user.save();
@@ -124,6 +124,7 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ error: 'Người dùng không tồn tại' });
         }
         await User.deleteOne({ username });
+        await Bank.deleteOne({ userId: user._id });
         res.json({ message: 'Xóa thành công' });
     } catch (error) {
         res.status(500).json({ error: 'Lỗi server' });
