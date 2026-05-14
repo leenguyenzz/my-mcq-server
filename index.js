@@ -24,7 +24,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(limiter);
+// app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 // Chế độ 'dev' sẽ cho ra các dòng log có màu sắc, dễ nhìn
