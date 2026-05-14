@@ -10,7 +10,11 @@ const app = express();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100 // giới hạn mỗi IP
+  max: 100, // giới hạn mỗi IP
+  keyGenerator: (req, res) => {
+    return req.user ? req.user.id : req.ip; // Nếu có user thì chặn theo ID, không thì chặn theo IP
+  },
+  message: 'Quá nhiều lần gọi API, vui lòng thử lại sau!'
 });
 
 // 1. Middlewares (Luôn để trên đầu)
